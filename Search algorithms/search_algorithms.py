@@ -1,8 +1,10 @@
 from collections import deque
 import heapq
+import sys
 from word_path_node import WordPathNode
 
 def find_edit_path_bfs(graph, start_word, end_word):
+    #initialize queue and visited set
     queue = deque([WordPathNode(start_word)])
     visited = set()
 
@@ -10,64 +12,60 @@ def find_edit_path_bfs(graph, start_word, end_word):
         current_node = queue.popleft()
         current_word = current_node.word
 
+        #found target word, return path
         if current_word == end_word:
             return current_node.get_path_to_root()
 
+        #skip visited words
         if current_word in visited:
             continue
 
         visited.add(current_word)
 
+        #check all neighbors
         for neighbor in graph[current_word]:
             if neighbor not in visited:
                 queue.append(WordPathNode(neighbor, current_node))
 
+    #no path found
+    return None
+
+def dfs_with_depth_control(graph, current_node, end_word, visited, curr_depth, max_depth):
+    #exceeded max depth, return none
+    if curr_depth > max_depth:
+        return None
+    #found target word, return path
+    if current_node.word == end_word:
+        return current_node.get_path_to_root()
+    
+    visited.add(current_node.word)
+    for neighbor in graph[current_node.word]:
+        if neighbor not in visited:
+            next_node = WordPathNode(neighbor, current_node)
+            result = dfs_with_depth_control(graph, next_node, end_word, visited, curr_depth + 1, max_depth)
+            if result:
+                return result
+    visited.remove(current_node.word)
     return None
 
 def find_edit_path_dfs(graph, start_word, end_word):
-    stack = [WordPathNode(start_word)]
     visited = set()
-
-    while stack:
-        current_node = stack.pop()
-        current_word = current_node.word
-
-        if current_word == end_word:
-            return current_node.get_path_to_root()
-
-        if current_word in visited:
-            continue
-
-        visited.add(current_word)
-
-        for neighbor in graph[current_word]:
-            if neighbor not in visited:
-                stack.append(WordPathNode(neighbor, current_node))
-
-    return None
+    #set max depth to half of recursion limit
+    max_depth = sys.getrecursionlimit() // 2
+    return dfs_with_depth_control(graph, WordPathNode(start_word), end_word, visited, 0, max_depth)
 
 def find_edit_path_iterative_deepening(graph, start_word, end_word):
-    def dfs_with_depth_limit(node, depth):
-        if depth == 0 and node.word == end_word:
-            return node.get_path_to_root()
-        if depth > 0:
-            for neighbor in graph[node.word]:
-                child_node = WordPathNode(neighbor, node)
-                result = dfs_with_depth_limit(child_node, depth - 1)
-                if result:
-                    return result
-        return None
-
-    max_depth = len(graph)
-    for depth in range(max_depth):
-        result = dfs_with_depth_limit(WordPathNode(start_word), depth)
+    max_possible_depth = len(graph)
+    for max_depth in range(max_possible_depth):
+        visited = set()
+        result = dfs_with_depth_control(graph, WordPathNode(start_word), end_word, visited, 0, max_depth)
         if result:
             return result
     return None
 
 def find_edit_path_A_star_search(graph, start_word, end_word):
-    
     def heuristic(word):
+        #count how many letters are different
         return sum(1 for a, b in zip(word, end_word) if a != b)
 
     start_node = WordPathNode(start_word)
@@ -79,6 +77,7 @@ def find_edit_path_A_star_search(graph, start_word, end_word):
         _, current_cost, current_node = heapq.heappop(frontier)
         current_word = current_node.word
 
+        #found target word, return path
         if current_word == end_word:
             return current_node.get_path_to_root()
 
@@ -91,4 +90,5 @@ def find_edit_path_A_star_search(graph, start_word, end_word):
                 heapq.heappush(frontier, (priority, new_cost, next_node))
                 came_from[next_word] = current_word
 
+    #no path found
     return None

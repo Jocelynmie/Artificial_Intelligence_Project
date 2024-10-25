@@ -1,0 +1,24 @@
+function FindPathWithRequiredWords(start, end, requiredWords):
+    allWords = [start, end] + requiredWords
+    shortestPaths = {}
+    
+    // Find shortest paths between all word pairs
+    for each pair (word1, word2) in allWords:
+        shortestPaths[word1][word2] = FindShortestPath(word1, word2)
+    
+    // Find best order to visit required words
+    bestOrder = FindBestOrder(start, end, requiredWords)
+    
+    // Construct final path
+    finalPath = []
+    for i = 0 to length(bestOrder) - 1:
+        currentWord = bestOrder[i]
+        nextWord = bestOrder[i+1]
+        finalPath += shortestPaths[currentWord][nextWord]
+    
+    return finalPath
+
+function FindBestOrder(start, end, requiredWords):
+    // Solve traveling salesman problem
+    // Return best order to visit all words
+    // (implementation details omitted for simplicity)

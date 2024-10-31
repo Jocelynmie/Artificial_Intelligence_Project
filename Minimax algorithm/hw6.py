@@ -105,22 +105,20 @@ class GameState:
 
 #Minimax algorithm
 class TicTacToeSolver:
-    #returns the best move for this player to make given the current state.
     def find_best_move(self, state: GameState, player: Player) -> Move:
-        alpha = float('-inf')
-        beta = float('inf')
+        alpha = float('-inf')  
+        beta = float('inf')    
         return self.solve_my_move(state, alpha, beta, player)
-    #return the score for the player whose score maximize
+
     def solve_my_move(self, state: GameState, alpha: float, beta: float, player: Player) -> Move:
-        #base case
         if state.game_over():
             winner = state.winner()
             if winner is None:
-                return Move(0)  #Draw
+                return Move(0)  # Draw
             elif winner == player:
-                return Move(1)  #Win
+                return Move(1)  # Win 
             else:
-                return Move(-1)  #Loss
+                return Move(-1)  # Loss 
         
         best_move = None
         
@@ -129,49 +127,44 @@ class TicTacToeSolver:
             if new_state is None:
                 continue
                 
-            child = self.solve_opponent_move(new_state, alpha, beta, player)
+            child = self.solve_opponent_move(new_state, alpha, beta, player.opposite())
             
-            #Update
             if best_move is None or child.value > best_move.value:
                 best_move = Move(child.value, row, col)
             
-            alpha = max(alpha, best_move.value)
+            alpha = max(alpha, child.value)
             if beta <= alpha:
-                break  #cut-off
-        
-        return best_move
-    
-    def solve_opponent_move(self, state: GameState, alpha: float, beta: float, player: Player) -> Move:
-        #base case
-        if state.game_over():
-            winner = state.winner()
-            if winner is None:
-                return Move(0)  #Draw
-            elif winner == player:
-                return Move(1)  #Win
-            else:
-                return Move(-1)  #Loss
-        
-        best_move = None
-        
-        #try each empty spot
-        for row, col in state.get_empty_spots():
-            new_state = state.move(row, col, player.opposite())
-            if new_state is None:
-                continue
-                
-            child = self.solve_my_move(new_state, alpha, beta, player)
-            
-            #update best move 
-            if best_move is None or child.value < best_move.value:
-                best_move = Move(child.value, row, col)
-            
-            beta = min(beta, best_move.value)
-            if beta <= alpha:
-                break  #cut-off
+                break
         
         return best_move
 
+    def solve_opponent_move(self, state: GameState, alpha: float, beta: float, player: Player) -> Move:
+        if state.game_over():
+            winner = state.winner()
+            if winner is None:
+                return Move(0)  # Draw 
+            elif winner == player:
+                return Move(-1) 
+            else:
+                return Move(1) 
+        
+        best_move = None
+        
+        for row, col in state.get_empty_spots():
+            new_state = state.move(row, col, player)
+            if new_state is None:
+                continue
+                
+            child = self.solve_my_move(new_state, alpha, beta, player.opposite())
+            
+            if best_move is None or child.value < best_move.value:
+                best_move = Move(child.value, row, col)
+            
+            beta = min(beta, child.value)
+            if beta <= alpha:
+                break
+        
+        return best_move
 def main():
     state = GameState()
     solver = TicTacToeSolver()
